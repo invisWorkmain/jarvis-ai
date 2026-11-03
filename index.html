@@ -222,27 +222,30 @@ function addMessage(text,who){
  content.scrollTop=content.scrollHeight;
 }
 
-/* DEEP BRITISH ENGLISH VOICE */
+/* JARVIS VOICE SYSTEM */
 function speak(text){
  if(!('speechSynthesis' in window))return;
 
  speechSynthesis.cancel();
 
- function speakWithVoice(){
-  const voices=speechSynthesis.getVoices();
+ const synth=speechSynthesis;
 
+ function speakWithVoice(){
+  const voices=synth.getVoices();
+
+  // Prioritise higher-quality British English voices.
   const preferredNames=[
+   'Daniel (Enhanced)',
    'Daniel',
-   'Arthur',
    'Oliver',
-   'George',
-   'Ryan',
-   'Google UK English Male'
+   'Arthur',
+   'Google UK English Male',
+   'Google UK English'
   ];
 
   let britishVoice=null;
 
-  // Find preferred British voices first
+  // First: preferred British voices.
   for(const name of preferredNames){
    britishVoice=voices.find(v=>
     v.lang.toLowerCase().startsWith('en-gb') &&
@@ -252,14 +255,22 @@ function speak(text){
    if(britishVoice)break;
   }
 
-  // Fallback to any available British English voice
+  // Second: any enhanced or premium British voice.
+  if(!britishVoice){
+   britishVoice=voices.find(v=>
+    v.lang.toLowerCase().startsWith('en-gb') &&
+    /enhanced|premium/i.test(v.name)
+   );
+  }
+
+  // Third: any available British English voice.
   if(!britishVoice){
    britishVoice=voices.find(v=>
     v.lang.toLowerCase().startsWith('en-gb')
    );
   }
 
-  // Last resort: any English voice
+  // Last fallback: any English voice.
   if(!britishVoice){
    britishVoice=voices.find(v=>
     v.lang.toLowerCase().startsWith('en')
@@ -270,23 +281,27 @@ function speak(text){
 
   if(britishVoice){
    utterance.voice=britishVoice;
+   utterance.lang=britishVoice.lang;
+  }else{
+   utterance.lang='en-GB';
   }
 
-  utterance.lang='en-GB';
-  utterance.rate=0.88;
-  utterance.pitch=0.72;
+  // Calm, measured and mature delivery.
+  utterance.rate=0.93;
+  utterance.pitch=0.88;
   utterance.volume=1;
 
-  speechSynthesis.speak(utterance);
+  synth.speak(utterance);
  }
 
- const voices=speechSynthesis.getVoices();
-
- if(voices.length){
+ // Wait for the device's voice list if it has not loaded yet.
+ if(synth.getVoices().length){
   speakWithVoice();
  }else{
-  speechSynthesis.onvoiceschanged=function(){
-   speechSynthesis.onvoiceschanged=null;
+  const previousHandler=synth.onvoiceschanged;
+
+  synth.onvoiceschanged=function(){
+   synth.onvoiceschanged=previousHandler;
    speakWithVoice();
   };
  }
