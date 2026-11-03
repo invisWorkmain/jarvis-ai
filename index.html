@@ -194,8 +194,11 @@ const mic=document.getElementById('mic');
 const line=document.getElementById('systemline');
 const content=document.getElementById('content');
 
+const JARVIS_API='https://jarvis-brain.g2b65wnktk.workers.dev/';
+
 let recognition=null;
 let listening=false;
+let conversation=[];
 
 function addMessage(text,who){
  const div=document.createElement('div');
@@ -215,15 +218,64 @@ function speak(text){
  speechSynthesis.speak(utterance);
 }
 
-function sendMessage(){
+async function sendMessage(){
  const text=input.value.trim();
  if(!text)return;
+
  addMessage(text,'user');
  input.value='';
- const reply="My interface is working, but my AI brain hasn't been connected yet. Once connected, I'll be able to answer your questions intelligently.";
- addMessage(reply,'ai');
- speak(reply);
- line.textContent='COMMAND RECEIVED';
+
+ conversation.push({
+  role:'user',
+  content:text
+ });
+
+ line.textContent='CONNECTING TO JARVIS BRAIN...';
+
+ try{
+  const response=await fetch(JARVIS_API,{
+   method:'POST',
+   headers:{
+    'Content-Type':'application/json'
+   },
+   body:JSON.stringify({
+    messages:conversation
+   })
+  });
+
+  if(!response.ok){
+   throw new Error('Server error: '+response.status);
+  }
+
+  const data=await response.json();
+
+  const reply=
+   data.reply||
+   data.response||
+   data.result?.response||
+   data.choices?.[0]?.message?.content;
+
+  if(!reply){
+   throw new Error('Unexpected AI response format');
+  }
+
+  conversation.push({
+   role:'assistant',
+   content:reply
+  });
+
+  addMessage(reply,'ai');
+  speak(reply);
+  line.textContent='JARVIS BRAIN ONLINE';
+
+ }catch(error){
+  console.error('JARVIS ERROR:',error);
+  conversation.pop();
+
+  const reply='I could not connect to my AI brain. Please check the connection.';
+  addMessage(reply,'ai');
+  line.textContent='CONNECTION ERROR';
+ }
 }
 
 function toggleVoice(){
@@ -232,11 +284,13 @@ function toggleVoice(){
   return;
  }
 
- const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+ const SpeechRecognition=
+  window.SpeechRecognition||
+  window.webkitSpeechRecognition;
 
  if(!SpeechRecognition){
   line.textContent='VOICE INPUT NOT SUPPORTED IN THIS BROWSER';
-  alert('Voice input is not supported here. Try Safari or another supported browser.');
+  alert('Voice input is not supported here. Try a supported browser.');
   return;
  }
 
@@ -265,18 +319,31 @@ function toggleVoice(){
  recognition.onend=()=>{
   listening=false;
   mic.classList.remove('active');
+  document.getElementById('reactor').classList.remove('listening');
   document.body.classList.remove('listening');
-  line.textContent='AWAITING YOUR COMMAND';
+
+  if(line.textContent==='LISTENING TO YOUR COMMAND...'){
+   line.textContent='AWAITING YOUR COMMAND';
+  }
  };
 
- try{recognition.start();}
- catch(e){line.textContent='VOICE SYSTEM BUSY';}
+ try{
+  recognition.start();
+ }catch(error){
+  line.textContent='VOICE SYSTEM BUSY';
+ }
 }
 
 function clearChat(){
  messages.innerHTML='';
+ conversation=[];
+
  addMessage('New conversation started. Awaiting your command.','ai');
- speechSynthesis?.cancel();
+
+ if('speechSynthesis' in window){
+  speechSynthesis.cancel();
+ }
+
  line.textContent='AWAITING YOUR COMMAND';
 }
 
