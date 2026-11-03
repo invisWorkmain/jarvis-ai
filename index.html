@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#030712">
+<title>JARVIS AI</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#030712;color:#eaf7ff;
+ font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;
+ min-height:100vh;display:flex;overflow:hidden
+}
+.sidebar{
+ width:255px;background:#070e1c;border-right:1px solid #152d43;
+ padding:25px;display:flex;flex-direction:column;gap:22px
+}
+.brand{font-size:25px;font-weight:900;letter-spacing:6px;color:#69ddff}
+.sub{font-size:10px;color:#587d99;letter-spacing:3px;margin-top:5px}
+.new{
+ padding:14px;border:1px solid #22516b;background:#0b2032;
+ color:#a9eaff;border-radius:10px;font-size:13px
+}
+.history{font-size:11px;color:#66849f;letter-spacing:2px}
+main{flex:1;display:flex;flex-direction:column;min-width:0}
+header{
+ height:65px;border-bottom:1px solid #142a40;
+ display:flex;align-items:center;justify-content:space-between;padding:0 25px;
+ background:#050b16
+}
+.status{font-size:11px;color:#54e6a6;letter-spacing:1px}
+.content{
+ flex:1;overflow-y:auto;display:flex;flex-direction:column;
+ align-items:center;padding:20px 18px
+}
+
+/* REACTOR CORE */
+.reactor{
+ width:180px;height:180px;position:relative;
+ display:grid;place-items:center;margin:10px 0 12px
+}
+.ring{
+ position:absolute;border-radius:50%;border:1px solid transparent;
+}
+.ring.one{
+ inset:4px;border-top-color:#5de0ff;border-bottom-color:#1683c7;
+ animation:spin 7s linear infinite
+}
+.ring.two{
+ inset:16px;border-left:2px solid #42caff;
+ border-right:2px solid #42caff;
+ animation:spinReverse 5s linear infinite
+}
+.ring.three{
+ inset:29px;border:1px dashed #3e9bc5;
+ animation:spin 12s linear infinite
+}
+.core{
+ width:85px;height:85px;border-radius:50%;
+ display:grid;place-items:center;
+ background:radial-gradient(circle,#1a9bd8 0%,#075078 35%,#031426 75%);
+ box-shadow:0 0 25px #159bdf,0 0 65px #087bc766,
+ inset 0 0 20px #72eaff;
+ animation:corePulse 2.5s ease-in-out infinite
+}
+.core span{font-size:35px;color:#d4f8ff;text-shadow:0 0 20px #fff}
+.reactor:before,.reactor:after{
+ content:"";position:absolute;border-radius:50%;
+ background:#8cecff;box-shadow:0 0 15px #35caff
+}
+.reactor:before{width:5px;height:5px;top:14px;right:37px}
+.reactor:after{width:4px;height:4px;bottom:20px;left:30px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spinReverse{to{transform:rotate(-360deg)}}
+@keyframes corePulse{
+ 50%{transform:scale(1.08);box-shadow:0 0 45px #159bdf,0 0 85px #087bc799}
+}
+h1{font-size:29px;letter-spacing:9px;margin:4px 0;color:#d9f5ff}
+.subtitle{font-size:10px;color:#5998ba;letter-spacing:4px}
+.systemline{
+ margin-top:17px;font-size:10px;color:#4da8cb;
+ letter-spacing:2px
+}
+.visualizer{
+ height:35px;display:flex;align-items:center;gap:4px;margin-top:12px
+}
+.visualizer i{
+ display:block;width:3px;height:7px;border-radius:5px;
+ background:#48caff;box-shadow:0 0 8px #159bdf
+}
+.listening .visualizer i{animation:wave .55s ease-in-out infinite alternate}
+.visualizer i:nth-child(2n){animation-delay:.15s}
+.visualizer i:nth-child(3n){animation-delay:.3s}
+@keyframes wave{to{height:30px}}
+.messages{width:min(720px,100%);margin-top:15px}
+.msg{
+ padding:14px 17px;margin:12px 0;border-radius:13px;
+ line-height:1.6;font-size:14px;white-space:pre-wrap;
+ overflow-wrap:anywhere
+}
+.ai{background:#0b1a2b;border:1px solid #193d57}
+.user{background:#102c42;border:1px solid #225778;margin-left:35px}
+.input-area{padding:16px;display:flex;justify-content:center}
+.input-wrap{
+ width:min(720px,100%);display:flex;align-items:center;gap:8px;
+ border:1px solid #24506b;background:#091728;
+ border-radius:17px;padding:9px;
+ box-shadow:0 0 20px #087bc71a
+}
+input{
+ flex:1;min-width:0;background:transparent;border:0;outline:0;
+ color:white;padding:11px;font-size:14px
+}
+.mic,.send{
+ border:0;border-radius:12px;height:43px;min-width:45px;
+ display:grid;place-items:center;font-size:19px
+}
+.mic{background:#102e47;color:#75dcff;border:1px solid #286080}
+.mic.active{background:#8a263e;color:white;box-shadow:0 0 20px #ed456a88}
+.send{background:linear-gradient(135deg,#087bb8,#26b9e9);color:white;padding:0 16px;font-size:12px;font-weight:800}
+footer{text-align:center;color:#46647e;font-size:9px;padding-bottom:12px;letter-spacing:2px}
+button{cursor:pointer}
+@media(max-width:650px){
+ .sidebar{display:none}
+ header{height:55px;padding:0 15px}
+ .reactor{width:155px;height:155px}
+ .core{width:73px;height:73px}
+ h1{font-size:24px}
+ .content{padding:18px 13px}
+ .input-area{padding:10px}
+}
+</style>
+</head>
+
+<body>
+<aside class="sidebar">
+ <div>
+  <div class="brand">JARVIS</div>
+  <div class="sub">PERSONAL INTELLIGENCE</div>
+ </div>
+ <button class="new" onclick="clearChat()">＋ New conversation</button>
+ <div class="history">SYSTEM STATUS</div>
+ <div style="font-size:12px;color:#65dba9">● Interface online</div>
+ <div style="font-size:12px;color:#66839d">Voice system available</div>
+ <div style="margin-top:auto;color:#49657e;font-size:10px;line-height:2">JARVIS v2.0<br>PERSONAL AI SYSTEM</div>
+</aside>
+
+<main>
+<header>
+ <strong style="letter-spacing:2px">JARVIS / CORE</strong>
+ <div class="status">● SYSTEM ONLINE</div>
+</header>
+
+<section class="content" id="content">
+ <div class="reactor" id="reactor">
+  <div class="ring one"></div>
+  <div class="ring two"></div>
+  <div class="ring three"></div>
+  <div class="core"><span>◈</span></div>
+ </div>
+
+ <h1>J.A.R.V.I.S.</h1>
+ <div class="subtitle">YOUR PERSONAL AI ASSISTANT</div>
+ <div class="systemline" id="systemline">AWAITING YOUR COMMAND</div>
+
+ <div class="visualizer" id="visualizer">
+  <i></i><i></i><i></i><i></i><i></i><i></i>
+  <i></i><i></i><i></i><i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+ </div>
+
+ <div class="messages" id="messages">
+  <div class="msg ai">Hello. I am JARVIS, your personal assistant. Voice controls are ready. My AI brain is awaiting connection. How may I assist you?</div>
+ </div>
+</section>
+
+<div class="input-area">
+ <div class="input-wrap">
+  <input id="prompt" placeholder="Ask JARVIS anything..." autocomplete="off">
+  <button class="mic" id="mic" onclick="toggleVoice()" aria-label="Start voice input">🎙</button>
+  <button class="send" onclick="sendMessage()">SEND</button>
+ </div>
+</div>
+<footer>JARVIS AI • PERSONAL INTELLIGENCE SYSTEM • V2.0</footer>
+</main>
+
+<script>
+const input=document.getElementById('prompt');
+const messages=document.getElementById('messages');
+const mic=document.getElementById('mic');
+const line=document.getElementById('systemline');
+const content=document.getElementById('content');
+
+let recognition=null;
+let listening=false;
+
+function addMessage(text,who){
+ const div=document.createElement('div');
+ div.className='msg '+who;
+ div.textContent=text;
+ messages.appendChild(div);
+ content.scrollTop=content.scrollHeight;
+}
+
+function speak(text){
+ if(!('speechSynthesis' in window))return;
+ speechSynthesis.cancel();
+ const utterance=new SpeechSynthesisUtterance(text);
+ utterance.rate=0.95;
+ utterance.pitch=0.9;
+ utterance.lang='en-US';
+ speechSynthesis.speak(utterance);
+}
+
+function sendMessage(){
+ const text=input.value.trim();
+ if(!text)return;
+ addMessage(text,'user');
+ input.value='';
+ const reply="My interface is working, but my AI brain hasn't been connected yet. Once connected, I'll be able to answer your questions intelligently.";
+ addMessage(reply,'ai');
+ speak(reply);
+ line.textContent='COMMAND RECEIVED';
+}
+
+function toggleVoice(){
+ if(listening){
+  recognition?.stop();
+  return;
+ }
+
+ const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+
+ if(!SpeechRecognition){
+  line.textContent='VOICE INPUT NOT SUPPORTED IN THIS BROWSER';
+  alert('Voice input is not supported here. Try Safari or another supported browser.');
+  return;
+ }
+
+ recognition=new SpeechRecognition();
+ recognition.lang='en-US';
+ recognition.interimResults=false;
+ recognition.continuous=false;
+
+ recognition.onstart=()=>{
+  listening=true;
+  mic.classList.add('active');
+  document.getElementById('reactor').classList.add('listening');
+  document.body.classList.add('listening');
+  line.textContent='LISTENING TO YOUR COMMAND...';
+ };
+
+ recognition.onresult=(event)=>{
+  input.value=event.results[0][0].transcript;
+  sendMessage();
+ };
+
+ recognition.onerror=(event)=>{
+  line.textContent='VOICE ERROR: '+event.error.toUpperCase();
+ };
+
+ recognition.onend=()=>{
+  listening=false;
+  mic.classList.remove('active');
+  document.body.classList.remove('listening');
+  line.textContent='AWAITING YOUR COMMAND';
+ };
+
+ try{recognition.start();}
+ catch(e){line.textContent='VOICE SYSTEM BUSY';}
+}
+
+function clearChat(){
+ messages.innerHTML='';
+ addMessage('New conversation started. Awaiting your command.','ai');
+ speechSynthesis?.cancel();
+ line.textContent='AWAITING YOUR COMMAND';
+}
+
+input.addEventListener('keydown',e=>{
+ if(e.key==='Enter')sendMessage();
+});
+</script>
+</body>
+</html>
